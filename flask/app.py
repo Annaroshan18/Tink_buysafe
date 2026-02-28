@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import joblib
+import os
 import numpy as np
 from buysafe import extract_features, convert_to_model_features
 
@@ -68,6 +69,7 @@ def predict():
     })
 
 
-# ---------------- RUN SERVER ----------------
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))  # Render gives PORT
+    app.run(host="0.0.0.0", port=port)
