@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuySafe - Website Trust Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: 'Montserrat', sans-serif;
+        background: #f4f4f7;
+        color: #333;
+    }
+    a { text-decoration: none; color: inherit; }
+    button {
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    button:hover { opacity: 0.85; }
+
+    /* ── Header ── */
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 18px 50px 12px;
+        background: linear-gradient(to right, #1b2a49, #4a90e2);
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        text-align: center;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+    .caption { font-size: 13px; color: #c8dcff; margin-top: 6px; }
+
+    /* ── Landing ── */
+    .landing {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 100px);
+        text-align: center;
+        padding: 40px 20px;
+    }
+    .landing-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-bottom: 12px;
+    }
+    .landing-title h2 { font-size: 34px; margin: 0; color: #1b2a49; }
+    .landing p { font-size: 17px; margin-bottom: 28px; color: #555; max-width: 480px; line-height: 1.6; }
+    .landing button { background: #2980b9; color: white; font-size: 16px; padding: 13px 36px; border-radius: 8px; }
+
+    /* ── Scan page ── */
+    .scan-container {
+        max-width: 720px;
+        margin: 40px auto 20px;
+        background: #fff;
+        padding: 32px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    }
+    .scan-container h2 { color: #1b2a49; margin-bottom: 22px; text-align: center; font-size: 22px; }
+    .scan-box { display: flex; gap: 10px; margin-bottom: 10px; }
+    .scan-box input {
+        flex: 1; padding: 13px 16px; border-radius: 7px;
+        border: 1.5px solid #ccc; font-size: 14px; font-family: 'Montserrat', sans-serif;
+    }
+    .scan-box input:focus { outline: none; border-color: #4a90e2; }
+    .scan-box button { background: #27ae60; color: white; font-size: 15px; padding: 13px 26px; border-radius: 7px; }
+
+    .status { font-style: italic; color: #777; min-height: 26px; margin: 10px 0; font-size: 14px; }
+
+    /* ── Score display ── */
+    .score-block {
+        display: none;
+        margin-top: 20px;
+        text-align: center;
+        padding: 24px 20px;
+        border-radius: 10px;
+        background: #f9f9fb;
+        border: 1px solid #e8e8ee;
+    }
+    .score-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
+    .score-number { font-size: 64px; font-weight: 700; line-height: 1; }
+    .score-outof { font-size: 18px; color: #999; margin-left: 4px; }
+    .score-risk { font-size: 20px; font-weight: bold; margin-top: 8px; }
+    .score-bar-wrap { margin: 14px auto 0; max-width: 320px; background: #e0e0e0; border-radius: 30px; height: 10px; overflow: hidden; }
+    .score-bar { height: 10px; border-radius: 30px; transition: width 1s ease; }
+    .safe   { color: #27ae60; }
+    .moderate { color: #f39c12; }
+    .high   { color: #c0392b; }
+    .bar-safe     { background: #27ae60; }
+    .bar-moderate { background: #f39c12; }
+    .bar-high     { background: #c0392b; }
+
+    /* ── Factor breakdown ── */
+    .breakdown-section {
+        max-width: 720px;
+        margin: 0 auto 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        overflow: hidden;
+        display: none;
+    }
+    .breakdown-header {
+        background: #1b2a49;
+        color: white;
+        padding: 14px 20px;
+        font-size: 15px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .factor-row {
+        display: grid;
+        grid-template-columns: 28px 1fr auto;
+        align-items: start;
+        gap: 12px;
+        padding: 14px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.15s;
+    }
+    .factor-row:last-child { border-bottom: none; }
+    .factor-row:hover { background: #fafbff; }
+    .factor-icon { font-size: 18px; margin-top: 2px; }
+    .factor-body { flex: 1; }
+    .factor-name { font-weight: bold; font-size: 14px; color: #1b2a49; margin-bottom: 3px; }
+    .factor-reason { font-size: 12px; color: #666; line-height: 1.5; }
+    .factor-weight { font-size: 11px; color: #aaa; margin-top: 4px; }
+    .factor-badge {
+        font-size: 12px;
+        font-weight: bold;
+        padding: 4px 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+        align-self: center;
+    }
+    .badge-good { background: #e8f8ef; color: #27ae60; }
+    .badge-warn { background: #fef6e4; color: #f39c12; }
+    .badge-bad  { background: #fdecea; color: #c0392b; }
+
+    /* ── Score summary card ── */
+    .summary-card {
+        max-width: 720px;
+        margin: 0 auto 40px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        padding: 20px 24px;
+        display: none;
+    }
+    .summary-card h4 { margin: 0 0 12px; color: #1b2a49; font-size: 15px; }
+    .summary-formula {
+        background: #f4f6fb;
+        border-radius: 8px;
+        padding: 14px 18px;
+        font-size: 13px;
+        color: #444;
+        line-height: 1.8;
+        border-left: 4px solid #4a90e2;
+    }
+    .formula-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .formula-row:last-child { margin-bottom: 0; border-top: 1px solid #dde3f0; padding-top: 8px; font-weight: bold; color: #1b2a49; }
+    .formula-factor { color: #555; }
+    .formula-pts { font-weight: bold; }
+    .pts-good { color: #27ae60; }
+    .pts-bad  { color: #c0392b; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+    <div class="logo">
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4h3.2l1.1 2.5M8.3 6.5L11 16h14l2.5-9.5H8.3z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 16l-1.5 6H25" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="13" cy="26" r="2" fill="white"/>
+            <circle cx="22" cy="26" r="2" fill="white"/>
+        </svg>
+        <h1>BuySafe</h1>
+    </div>
+    <div class="caption">Your trusted website checker for safe online shopping</div>
+</header>
+
+<!-- Landing -->
+<div class="landing" id="landing">
+    <div class="landing-title">
+        <svg width="46" height="46" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4h3.2l1.1 2.5M8.3 6.5L11 16h14l2.5-9.5H8.3z" stroke="#1b2a49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 16l-1.5 6H25" stroke="#1b2a49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="13" cy="26" r="2" fill="#1b2a49"/>
+            <circle cx="22" cy="26" r="2" fill="#1b2a49"/>
+        </svg>
+        <h2>Welcome to BuySafe</h2>
+    </div>
+    <p>Paste any shopping website URL and get an instant trust score — with a full breakdown of every factor we checked.</p>
+    <button onclick="showScanPage()">Start Scanning</button>
+</div>
+
+<!-- Scan Page -->
+<div class="scan-container" id="scanPage" style="display:none;">
+    <h2>🔍 Scan a Website</h2>
+    <div class="scan-box">
+        <input type="text" id="urlInput" placeholder="e.g. https://some-shop.com">
+        <button onclick="scanWebsite()">Scan Now</button>
+    </div>
+    <div class="status" id="status"></div>
+
+    <!-- Score block -->
+    <div class="score-block" id="scoreBlock">
+        <div class="score-label">Overall Trust Score</div>
+        <div>
+            <span class="score-number" id="scoreNumber">—</span>
+            <span class="score-outof">/ 100</span>
+        </div>
+        <div class="score-risk" id="scoreRisk"></div>
+        <div class="score-bar-wrap">
+            <div class="score-bar" id="scoreBar" style="width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Factor Breakdown -->
+<div class="breakdown-section" id="breakdownSection">
+    <div class="breakdown-header">📊 Score Breakdown — How We Calculated This</div>
+    <div id="factorList"></div>
+</div>
+
+<!-- Score Formula Summary -->
+<div class="summary-card" id="summaryCard">
+    <h4>🧮 Score Calculation Summary</h4>
+    <div class="summary-formula" id="formulaRows"></div>
+</div>
+
+<!-- <script>
+    function showScanPage() {
+        document.getElementById("landing").style.display = "none";
+        document.getElementById("scanPage").style.display = "block";
+    }
+
+    // Factor definitions: name, max points, icon, how it's evaluated
+    const FACTORS = [
+        { key: "ssl",         name: "SSL Certificate",     icon: "🔐", maxPts: 20, desc: "Sites with a valid HTTPS certificate encrypt your data. Missing SSL is a major red flag for shopping sites." },
+        { key: "domainAge",   name: "Domain Age",          icon: "📅", maxPts: 15, desc: "Scam sites are usually newly created. Older domains (2+ years) are significantly more trustworthy." },
+        { key: "ownerVis",    name: "Domain Owner Visible",icon: "👤", maxPts: 10, desc: "Legitimate businesses don't hide who they are. Hidden WHOIS data is often a sign of anonymity abuse." },
+        { key: "blacklist",   name: "Blacklist Check",     icon: "🚫", maxPts: 20, desc: "We cross-check the domain against known scam, phishing, and malware databases." },
+        { key: "refund",      name: "Refund Policy",       icon: "↩️",  maxPts: 8,  desc: "Trustworthy shops always publish a clear refund or return policy. Absence is a warning sign." },
+        { key: "privacy",     name: "Privacy Policy",      icon: "📄", maxPts: 7,  desc: "A privacy policy is legally required in many countries and signals the site is operating legitimately." },
+        { key: "contact",     name: "Contact Page",        icon: "📞", maxPts: 5,  desc: "Scam sites often have no way to reach them. A contact page with real details adds credibility." },
+        { key: "social",      name: "Social Media Presence",icon:"📱", maxPts: 5,  desc: "Active, verifiable social media accounts suggest the business is real and established." },
+        { key: "suspicious",  name: "Suspicious Keywords", icon: "⚠️", maxPts: 5,  desc: "We scan page content for phrases like 'guaranteed winner', 'limited time secret', 'wire transfer only' etc." },
+        { key: "https",       name: "HTTPS Redirect",      icon: "🔁", maxPts: 5,  desc: "Sites should automatically redirect HTTP to HTTPS. Failure to do so risks exposing user data." },
+    ];
+
+    async function scanWebsite() {
+        const url = document.getElementById("urlInput").value.trim();
+        if (!url) { alert("Please enter a URL!"); return; }
+
+        const status = document.getElementById("status");
+        document.getElementById("scoreBlock").style.display = "none";
+        document.getElementById("breakdownSection").style.display = "none";
+        document.getElementById("summaryCard").style.display = "none";
+
+        const steps = [
+            "🔗 Connecting to server...",
+            "🔐 Checking SSL certificate...",
+            "📅 Analyzing domain age & ownership...",
+            "🚫 Cross-checking blacklists...",
+            "📄 Searching for refund & privacy policy...",
+            "📱 Looking for social media presence...",
+            "⚠️ Scanning for suspicious keywords...",
+            "🧮 Calculating trust score..."
+        ];
+        for (let step of steps) {
+            status.innerHTML = step;
+            await new Promise(r => setTimeout(r, 600));
+        }
+
+        // ── Simulate each factor with points earned ──
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        const domainAgeDays = rand(10, 3650);
+        const domainAgeYrs = (domainAgeDays / 365).toFixed(1);
+
+        // Points earned per factor (realistic simulation)
+        const sslValid     = Math.random() > 0.25;
+        const sslExpiry    = sslValid ? `${rand(20, 365)} days` : "N/A";
+        const ageScore     = domainAgeDays > 730 ? 15 : domainAgeDays > 365 ? 10 : domainAgeDays > 180 ? 6 : 2;
+        const ownerVisible = Math.random() > 0.35;
+        const notBlacklisted = Math.random() > 0.2;
+        const hasRefund    = Math.random() > 0.3;
+        const hasPrivacy   = Math.random() > 0.25;
+        const hasContact   = Math.random() > 0.2;
+        const hasSocial    = Math.random() > 0.4;
+        const noSuspicious = Math.random() > 0.3;
+        const hasHttps     = Math.random() > 0.2;
+        const serverLoc    = ["United States","Germany","Netherlands","Singapore","Unknown"][rand(0,4)];
+        const registrar    = ownerVisible ? ["GoDaddy","Namecheap","Google Domains","Cloudflare"][rand(0,3)] : "Hidden / Private";
+
+        const ptsEarned = {
+            ssl:       sslValid      ? 20 : 0,
+            domainAge: ageScore,
+            ownerVis:  ownerVisible  ? 10 : 0,
+            blacklist: notBlacklisted? 20 : 0,
+            refund:    hasRefund     ? 8  : 0,
+            privacy:   hasPrivacy    ? 7  : 0,
+            contact:   hasContact    ? 5  : 0,
+            social:    hasSocial     ? 5  : 0,
+            suspicious:noSuspicious  ? 5  : 0,
+            https:     hasHttps      ? 5  : 0,
+        };
+
+        const totalScore = Object.values(ptsEarned).reduce((a,b) => a+b, 0);
+        let risk = "", riskClass = "", barClass = "";
+        if (totalScore >= 75)      { risk = "✅ Safe";          riskClass = "safe";     barClass = "bar-safe"; }
+        else if (totalScore >= 45) { risk = "⚠️ Moderate Risk"; riskClass = "moderate"; barClass = "bar-moderate"; }
+        else                       { risk = "🚫 High Risk";     riskClass = "high";     barClass = "bar-high"; }
+
+        // ── Render score block ──
+        const scoreNum  = document.getElementById("scoreNumber");
+        const scoreRisk = document.getElementById("scoreRisk");
+        const scoreBar  = document.getElementById("scoreBar");
+        scoreNum.textContent  = totalScore;
+        scoreNum.className    = "score-number " + riskClass;
+        scoreRisk.textContent = risk;
+        scoreRisk.className   = "score-risk " + riskClass;
+        scoreBar.className    = "score-bar " + barClass;
+        document.getElementById("scoreBlock").style.display = "block";
+        setTimeout(() => { scoreBar.style.width = totalScore + "%"; }, 100);
+
+        // ── Render factor breakdown ──
+        const factorDetails = {
+            ssl:       { earned: ptsEarned.ssl,       pass: sslValid,      good: `Valid SSL ✓ (Expires in ${sslExpiry})`,          bad: "SSL certificate missing or invalid — your data could be exposed" },
+            domainAge: { earned: ptsEarned.domainAge,  pass: domainAgeDays>365, good: `Domain is ${domainAgeYrs} years old — established & trusted`, bad: `Domain only ${domainAgeYrs} years old — newly created domains are riskier` },
+            ownerVis:  { earned: ptsEarned.ownerVis,   pass: ownerVisible,  good: `Owner visible: ${registrar}`,                    bad: "Domain owner is hidden — anonymous registration raises concerns" },
+            blacklist: { earned: ptsEarned.blacklist,  pass: notBlacklisted,good: "Not found on any blacklist databases ✓",         bad: "Domain flagged on scam/phishing/malware blacklists ✗" },
+            refund:    { earned: ptsEarned.refund,     pass: hasRefund,     good: "Refund / return policy page found ✓",            bad: "No refund policy found — risky for purchases" },
+            privacy:   { earned: ptsEarned.privacy,    pass: hasPrivacy,    good: "Privacy policy page found ✓",                   bad: "No privacy policy — may not be legally compliant" },
+            contact:   { earned: ptsEarned.contact,    pass: hasContact,    good: "Contact page with details found ✓",             bad: "No contact page found — hard to reach if something goes wrong" },
+            social:    { earned: ptsEarned.social,     pass: hasSocial,     good: "Active social media presence found ✓",          bad: "No verifiable social media presence found" },
+            suspicious:{ earned: ptsEarned.suspicious, pass: noSuspicious,  good: "No suspicious keywords detected in content ✓",  bad: "Suspicious phrases detected (e.g. 'guaranteed winner', 'wire only')" },
+            https:     { earned: ptsEarned.https,      pass: hasHttps,      good: "Automatically redirects HTTP → HTTPS ✓",        bad: "No HTTPS redirect — insecure traffic possible" },
+        };
+
+        const factorHTML = FACTORS.map(f => {
+            const d = factorDetails[f.key];
+            const pct = Math.round((d.earned / f.maxPts) * 100);
+            const badgeClass = d.pass ? "badge-good" : "badge-bad";
+            const badgeText  = `${d.earned} / ${f.maxPts} pts`;
+            const reasonText = d.pass ? d.good : d.bad;
+            const impact     = f.maxPts >= 15 ? "High impact factor" : f.maxPts >= 8 ? "Medium impact factor" : "Low impact factor";
+
+            return `<div class="factor-row">
+                <div class="factor-icon">${f.icon}</div>
+                <div class="factor-body">
+                    <div class="factor-name">${f.name}</div>
+                    <div class="factor-reason">${reasonText}</div>
+                    <div class="factor-reason" style="margin-top:4px;color:#999;font-size:11px;">ℹ️ ${f.desc}</div>
+                    <div class="factor-weight">${impact} · Max ${f.maxPts} points</div>
+                </div>
+                <div class="factor-badge ${badgeClass}">${badgeText}</div>
+            </div>`;
+        }).join('');
+
+        document.getElementById("factorList").innerHTML = factorHTML;
+        document.getElementById("breakdownSection").style.display = "block";
+
+        // ── Score formula summary ──
+        const formulaHTML = FACTORS.map(f => {
+            const d = factorDetails[f.key];
+            const cls = d.earned === f.maxPts ? "pts-good" : d.earned === 0 ? "pts-bad" : "";
+            return `<div class="formula-row">
+                <span class="formula-factor">${f.icon} ${f.name}</span>
+                <span class="formula-pts ${cls}">+${d.earned} / ${f.maxPts}</span>
+            </div>`;
+        }).join('') + `<div class="formula-row">
+            <span>🏆 Total Trust Score</span>
+            <span class="${riskClass}" style="font-size:16px;">${totalScore} / 100</span>
+        </div>`;
+
+        document.getElementById("formulaRows").innerHTML = formulaHTML;
+        document.getElementById("summaryCard").style.display = "block";
+
+        status.innerHTML = "✅ Scan complete!";
+    }
+</script> -->
+<script>
+function showScanPage() {
+    document.getElementById("landing").style.display = "none";
+    document.getElementById("scanPage").style.display = "block";
+}
+
+async function scanWebsite() {
+
+    const url = document.getElementById("urlInput").value.trim();
+    if (!url) {
+        alert("Please enter a URL!");
+        return;
+    }
+
+    const status = document.getElementById("status");
+    const scoreBlock = document.getElementById("scoreBlock");
+    const scoreNum = document.getElementById("scoreNumber");
+    const scoreRisk = document.getElementById("scoreRisk");
+    const scoreBar = document.getElementById("scoreBar");
+
+    scoreBlock.style.display = "none";
+    status.innerHTML = "🔎 Analyzing website using AI model...";
+
+    try {
+
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ url: url })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            status.innerHTML = "❌ " + data.error;
+            return;
+        }
+
+        const score = data.trust_score;
+        let riskText = "";
+        let riskClass = "";
+        let barClass = "";
+
+        if (data.risk === "Safe") {
+            riskText = "✅ Safe";
+            riskClass = "safe";
+            barClass = "bar-safe";
+        } else if (data.risk === "Moderate Risk") {
+            riskText = "⚠️ Moderate Risk";
+            riskClass = "moderate";
+            barClass = "bar-moderate";
+        } else {
+            riskText = "🚫 High Risk";
+            riskClass = "high";
+            barClass = "bar-high";
+        }
+
+        scoreNum.textContent = score;
+        scoreNum.className = "score-number " + riskClass;
+        scoreRisk.textContent = riskText;
+        scoreRisk.className = "score-risk " + riskClass;
+        scoreBar.className = "score-bar " + barClass;
+
+        scoreBlock.style.display = "block";
+        setTimeout(() => { scoreBar.style.width = score + "%"; }, 200);
+
+        status.innerHTML = "✅ Scan complete!";
+
+    } catch (err) {
+        status.innerHTML = "❌ Cannot connect to backend server";
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>
