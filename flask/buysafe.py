@@ -246,17 +246,3 @@ def predict_site(raw_features):
         reasons.append("Newly created domain")
 
     return trust_score, risk, reasons
-
-# Test Prediction
-
-# Example using feature extraction
-url = input("Enter website URL: ")
-features = extract_features(url)
-
-if features:
-    score, risk, reasons = predict_site(features)
-    print("Trust Score:", score)
-    print("Risk Level:", risk)
-    print("Reasons:")
-    for r in reasons:
-        print("-", r)
